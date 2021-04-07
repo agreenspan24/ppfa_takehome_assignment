@@ -153,9 +153,13 @@ class AppointmentTest(TestCase):
         appt_next_week = self.create_appointment({
             "datetime": datetime.now() + timedelta(days= 7)
         })
+        appt_last_week = self.create_appointment({
+            "datetime": datetime.now() - timedelta(days= 7)
+        })
 
         self.assertIsNotNone(appt_today)
         self.assertIsNotNone(appt_next_week)
+        self.assertIsNotNone(appt_last_week)
 
         fetched_appts = self.get_appointments(
             start_date= datetime.now().strftime("%m-%d-%Y"),
@@ -163,6 +167,9 @@ class AppointmentTest(TestCase):
         )
 
         self.assertIsNotNone(fetched_appts)
-        self.assertIn(appt_today["id"], map(lambda a: a["id"], fetched_appts))
-        self.assertNotIn(appt_next_week["id"], map(lambda a: a["id"], fetched_appts))
+
+        fetched_appt_ids = list(map(lambda a: a["id"], fetched_appts))
+        self.assertIn(appt_today["id"], fetched_appt_ids)
+        self.assertNotIn(appt_next_week["id"], fetched_appt_ids)
+        self.assertNotIn(appt_last_week["id"], fetched_appt_ids)
 
