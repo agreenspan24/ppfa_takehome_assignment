@@ -63,25 +63,35 @@ class GetDeleteUpdateAppointments(RetrieveUpdateAPIView):
 
         appointment.delete()
 
-        return Response(status= status.HTTP_200_OK)
+        return Response(status= status.HTTP_204_NO_CONTENT)
 
 
 class GetPostAppointments(ListCreateAPIView):
     serializer_class = AppointmentSerializer
 
+    def parse_date_from_query_params(self, param_name):
+        raw_date = self.request.query_params.get(param_name, None)
+
+        if not raw_date:
+            return None
+
+        try:
+            return timezone("UTC").localize(datetime.strptime(raw_date, "%m-%d-%Y"))
+
+        except:
+            return None
+
     def get_queryset(self):
         appointments = Appointment.objects.all()
 
-        start_date = self.request.query_params.get("start_date", None)
-        end_date = self.request.query_params.get("end_date", None)
+        start_date = self.parse_date_from_query_params("start_date")
+        end_date = self.parse_date_from_query_params("end_date",)
 
         if start_date:
-            start_date_parsed = timezone("UTC").localize(datetime.strptime(start_date, "%m-%d-%Y"))
-            appointments = appointments.filter(datetime__gte= start_date_parsed)
+            appointments = appointments.filter(datetime__gte= start_date)
 
         if end_date:
-            end_date_parsed = timezone("UTC").localize(datetime.strptime(end_date, "%m-%d-%Y"))
-            appointments = appointments.filter(datetime__lte= end_date_parsed)
+            appointments = appointments.filter(datetime__lte= end_date)
 
         return appointments
 

@@ -3,6 +3,8 @@ import requests
 from .models import Appointment
 from datetime import datetime, timedelta
 
+base_url = "http://localhost:8000/api/v1/appointments/"
+
 class AppointmentTest(TestCase):
     def create_appointment(self, data= {}):
         base_data = {
@@ -14,46 +16,46 @@ class AppointmentTest(TestCase):
 
         merged_data = {**base_data, **data}
 
-        response = requests.post("http://localhost:8000/api/v1/appointments/", json= merged_data)
+        response = requests.post(base_url, json= merged_data)
 
-        if response.status_code != 201:
+        if response.status_code >= 400:
             return None
 
         return response.json()
 
 
     def delete_appointment(self, id):
-        response = requests.delete(f"http://localhost:8000/api/v1/appointments/{id}")
+        response = requests.delete(f"{base_url}{id}")
 
-        if response.status_code != 200:
+        if response.status_code >= 400:
             return None
 
 
     def get_appointment(self, id):
-        response = requests.get(f"http://localhost:8000/api/v1/appointments/{id}")
+        response = requests.get(f"{base_url}{id}")
 
-        if response.status_code != 200:
+        if response.status_code >= 400:
             return None
 
         return response.json()
 
 
     def get_appointments(self, start_date= None, end_date= None):
-        response = requests.get("http://localhost:8000/api/v1/appointments", params= {
+        response = requests.get(base_url, params= {
             "start_date": start_date,
             "end_date": end_date
         })
 
-        if response.status_code != 200:
+        if response.status_code >= 400:
             return None
 
         return response.json()
 
 
     def update_appointment(self, id, data):
-        response = requests.post(f"http://localhost:8000/api/v1/appointments/{id}", json= data)
+        response = requests.post(f"{base_url}{id}", json= data)
 
-        if response.status_code != 200:
+        if response.status_code >= 400:
             return None
 
         return response.json()
@@ -67,7 +69,7 @@ class AppointmentTest(TestCase):
 
 
     def setUp(self):
-        pass
+        self.delete_all_appointments()
 
 
     def tearDown(self):
