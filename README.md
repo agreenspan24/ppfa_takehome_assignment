@@ -1,3 +1,5 @@
+***Please see the project_review.md file for a summary report on the project's development.***
+
 # Required software
 - python3
 - pip
@@ -15,7 +17,7 @@
     $ manage.py runserver
 
 In a separate terminal from the server:
-
+    $ source venv/bin/activate (if not already in venv)
     $ manage.py test
 
 You should see an error in the server terminal after running tests.
