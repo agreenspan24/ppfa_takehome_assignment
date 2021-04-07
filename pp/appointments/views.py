@@ -95,7 +95,7 @@ class GetPostAppointments(ListCreateAPIView):
     def post(self, request):
         data = request.data
 
-        serializer = self.serializer_class(data=data)
+        serializer = self.serializer_class(data= data)
 
         try:
             serializer.is_valid(raise_exception= True)

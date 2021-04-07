@@ -28,3 +28,5 @@ class Appointment(models.Model):
     )
     new_patient = models.BooleanField(null=False)
     contact_phone_number = models.CharField(validators=[phone_number_regex], max_length=13)
+
+    doctors = models.ManyToManyField("doctors.Doctor", related_name= "doctors")

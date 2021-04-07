@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 class AppointmentTest(TestCase):
     def create_appointment(self, data= {}):
         base_data = {
-            "datetime": datetime.now(),
+            "datetime": datetime.now().isoformat(),
             "reason": "GC",
             "new_patient": True,
             "contact_phone_number": "(214)543-2542"
@@ -14,7 +14,7 @@ class AppointmentTest(TestCase):
 
         merged_data = {**base_data, **data}
 
-        response = requests.post("http://localhost:8000/api/v1/appointments/", data= merged_data)
+        response = requests.post("http://localhost:8000/api/v1/appointments/", json= merged_data)
 
         if response.status_code != 201:
             return None
@@ -51,7 +51,7 @@ class AppointmentTest(TestCase):
 
 
     def update_appointment(self, id, data):
-        response = requests.post(f"http://localhost:8000/api/v1/appointments/{id}", data= data)
+        response = requests.post(f"http://localhost:8000/api/v1/appointments/{id}", json= data)
 
         if response.status_code != 200:
             return None
@@ -128,7 +128,7 @@ class AppointmentTest(TestCase):
         self.assertIsNotNone(appt)
 
         appt_updates = {
-            "datetime": datetime.now() + timedelta(hours= 2),
+            "datetime": (datetime.now() + timedelta(hours= 2)).isoformat(),
             "reason": "CH",
             "new_patient": False
         }
@@ -149,7 +149,7 @@ class AppointmentTest(TestCase):
     def test_get_appointments_filtered(self):
         appt_today = self.create_appointment()
         appt_next_week = self.create_appointment({
-            "datetime": datetime.now() + timedelta(days= 7)
+            "datetime": (datetime.now() + timedelta(days= 7)).isoformat()
         })
 
         self.assertIsNotNone(appt_today)
@@ -164,3 +164,82 @@ class AppointmentTest(TestCase):
         self.assertIn(appt_today["id"], map(lambda a: a["id"], fetched_appts))
         self.assertNotIn(appt_next_week["id"], map(lambda a: a["id"], fetched_appts))
 
+
+    def test_add_appointment_with_doctor(self):
+        appt = self.create_appointment({
+            "doctors": [{
+                "name": "Adam Greenspan",
+                "specialty": "NS",
+                "rating": 4
+            }]
+        })
+        self.assertIsNotNone(appt)
+
+        fetched_appt = self.get_appointment(appt["id"])
+
+        self.assertIsNotNone(fetched_appt)
+        self.assertEqual(len(fetched_appt["doctors"]), 1)
+
+
+    def test_add_doctor_to_existing_appointment(self):
+        appt = self.create_appointment()
+        self.assertIsNotNone(appt)
+
+        self.update_appointment(appt["id"], {
+            "doctors": [{
+                "name": "Adam Greenspan",
+                "specialty": "NS",
+                "rating": 4
+            }, {
+                "name": "Terri Train",
+                "specialty": "DT",
+                "rating": 5
+            }]
+        })
+
+        updated_appt = self.get_appointment(appt["id"])
+
+        self.assertIsNotNone(updated_appt)
+        self.assertEqual(len(updated_appt["doctors"]), 2)
+
+
+    def test_remove_doctor_from_existing_appointment(self):
+        appt = self.create_appointment({
+            "doctors": [{
+                "name": "Terri Train",
+                "specialty": "DT",
+                "rating": 5
+            }]
+        })
+        self.assertIsNotNone(appt)
+
+        self.update_appointment(appt["id"], {
+            "doctors": []
+        })
+
+        updated_appt = self.get_appointment(appt["id"])
+
+        self.assertIsNotNone(updated_appt)
+        self.assertEqual(len(updated_appt["doctors"]), 0)
+
+
+    def test_add_doctor_conflicting_appointments(self):
+        appt = self.create_appointment({
+            "doctors": [{
+                "name": "Adam Greenspan",
+                "specialty": "NS",
+                "rating": 4
+            }]
+        })
+        self.assertIsNotNone(appt)
+        self.assertEqual(len(appt["doctors"]), 1)
+
+        appt_two = self.create_appointment({
+            "doctors": [{
+                "name": "Adam Greenspan",
+                "specialty": "NS",
+                "rating": 4
+            }]
+        })
+        self.assertIsNotNone(appt_two)
+        self.assertEqual(len(appt_two["doctors"]), 0)
